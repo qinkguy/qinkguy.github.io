@@ -1,1 +1,0 @@
-# qinkguy.github.io
