@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For You</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ================================================
+           CONFIGURATION & VARIABLES
+           ================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-primary-pink: #fce4ec;
+            --color-accent-pink: #f8bbd0;
+            --color-light-peach: #ffe0b2;
+            --color-white: #ffffff;
+            --color-dark-pink: #f48fb1;
+            --color-text: #2c2c2c;
+            --easing: cubic-bezier(0.4, 0.0, 0.2, 1);
+            --easing-ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--color-primary-pink) 0%, var(--color-white) 50%, var(--color-light-peach) 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* ================================================
+           SECTION 0 - INTRO SCREEN
+           ================================================ */
+        .intro-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #f8bbd0 0%, #ffffff 50%, #f8bbd0 100%);
+            opacity: 1;
+            transition: opacity 1.2s var(--easing);
+            z-index: 15;
+        }
+
+        .intro-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-content {
+            text-align: center;
+            animation: fade-in-intro 1s var(--easing) forwards;
+            cursor: pointer;
+            padding: 40px;
+            transition: transform 0.3s var(--easing);
+        }
+
+        .intro-content:hover {
+            transform: scale(1.05);
+        }
+
+        .intro-content:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes fade-in-intro {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .intro-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            font-weight: 600;
+            color: var(--color-dark-pink);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .intro-subtitle {
+            font-size: 1.1rem;
+            color: var(--color-text);
+            margin-bottom: 40px;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        /* ================================================
+           SECTION 1 - LOVE LETTER SCREEN
+           ================================================ */
+        .letter-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            opacity: 1;
+            transition: opacity 1.2s var(--easing);
+        }
+
+        .letter-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Floating background hearts */
+        .floating-hearts {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.15;
+            filter: blur(0.5px);
+            animation: float-gentle 8s ease-in-out infinite;
+        }
+
+        .floating-heart.small {
+            font-size: 1.2rem;
+            filter: blur(1.5px);
+        }
+
+        .floating-heart.large {
+            font-size: 3rem;
+        }
+
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Envelope container */
+        .envelope-container {
+            position: relative;
+            width: 260px;
+            height: 180px;
+            perspective: 1000px;
+            cursor: pointer;
+            z-index: 10;
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .envelope-container.opened {
+            animation: none;
+        }
+
+        /* Envelope body */
+        .envelope {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: var(--color-white);
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(244, 143, 177, 0.3);
+            overflow: hidden;
+        }
+
+        .envelope.opened {
+            box-shadow: 0 20px 60px rgba(244, 143, 177, 0.5);
+        }
+
+        /* Envelope front */
+        .envelope-front {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            background: var(--color-white);
+            border-radius: 8px;
+        }
+
+        /* Envelope flap (triangle) */
+        .envelope-flap {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 130px solid transparent;
+            border-right: 130px solid transparent;
+            border-top: 90px solid var(--color-accent-pink);
+            top: 0;
+            left: 0;
+            transform-origin: top center;
+            transition: transform 0.8s var(--easing);
+        }
+
+        .envelope-container.opened .envelope-flap {
+            transform: rotateX(180deg);
+        }
+
+        /* Letter inside envelope */
+        .letter-paper {
+            position: absolute;
+            width: 95%;
+            height: 85%;
+            background: var(--color-white);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 4px;
+            opacity: 0;
+            animation: letter-reveal 1.2s var(--easing) 0.6s forwards;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        @keyframes letter-reveal {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, 20%);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .letter-content {
+            animation: text-fade-in 1.5s var(--easing) 1s forwards;
+            opacity: 0;
+        }
+
+        @keyframes text-fade-in {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .letter-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: var(--color-dark-pink);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .letter-subtitle {
+            font-size: 0.95rem;
+            color: var(--color-text);
+            opacity: 0.8;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+        }
+
+        /* Heart explosion particles */
+        .heart-particle {
+            position: fixed;
+            font-size: 1.8rem;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+
+        .heart-particle.explode {
+            animation: heart-burst 1.2s var(--easing) forwards;
+        }
+
+        @keyframes heart-burst {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0.2);
+            }
+        }
+
+        /* ================================================
+           SECTION 2 - VIDEO SCREEN
+           ================================================ */
+        .video-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #f48fb1 0%, #ec407a 100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s var(--easing);
+            z-index: 20;
+        }
+
+        .video-screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .video-container {
+            width: 90%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: zoom-in 0.8s var(--easing);
+        }
+
+        @keyframes zoom-in {
+            0% {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ================================================
+           RESPONSIVE & UTILITY
+           ================================================ */
+        @media (max-width: 480px) {
+            .letter-title {
+                font-size: 1.8rem;
+            }
+
+            .letter-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .envelope-container {
+                width: 220px;
+                height: 150px;
+            }
+
+            .envelope-flap {
+                border-left: 110px solid transparent;
+                border-right: 110px solid transparent;
+                border-top: 75px solid var(--color-accent-pink);
+            }
+        }
+
+        /* Prevent zoom on iOS */
+        input, button {
+            font-size: 16px;
+        }
+
+        html {
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+    <!-- ================================================
+         SECTION 0: INTRO SCREEN
+         ================================================ -->
+    <div class="intro-screen" id="introScreen">
+        <div class="intro-content" id="introContent">
+            <h1 class="intro-title">มีจดหมายมาส่งคับ 💌</h1>
+            <p class="intro-subtitle">คลิกเพื่อรับจดหมาย</p>
+        </div>
+    </div>
+
+    <!-- ================================================
+         SECTION 1: LOVE LETTER SCREEN
+         ================================================ -->
+    <div class="letter-screen" id="letterScreen">
+        <!-- Floating background hearts -->
+        <div class="floating-hearts" id="floatingHearts"></div>
+
+        <!-- Main envelope interaction -->
+        <div class="envelope-container" id="envelopeContainer">
+            <div class="envelope" id="envelope">
+                <div class="envelope-front">
+                    <div class="envelope-flap"></div>
+                </div>
+                <div class="letter-paper">
+                    <div class="letter-content">
+                        <h1 class="letter-title">For You 💗</h1>
+                        <p class="letter-subtitle">I made this just for you</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================
+         SECTION 2: VIDEO SCREEN
+         ================================================ -->
+    <div class="video-screen" id="videoScreen">
+        <div class="video-container">
+            <video id="videoElement" controls autoplay>
+                <source src="video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+
+    <script>
+        // ================================================
+        // CONFIGURATION
+        // ================================================
+        const CONFIG = {
+            musicSource: 'music.mp3',
+            videoSource: 'video.mp4',
+            audioFadeInDuration: 6000,     // 6 seconds
+            audioFadeOutDuration: 800,      // smooth fade out
+            audioMaxVolume: 0.4,
+            letterTitle: 'For You 💗',
+            letterSubtitle: 'I made this just for you',
+        };
+
+        // ================================================
+        // STATE & DOM ELEMENTS
+        // ================================================
+        let audioPlaying = false;
+        let envelopeOpened = false;
+        let transitionInProgress = false;
+        let audioInitialized = false;
+
+        const backgroundAudio = new Audio(CONFIG.musicSource);
+        backgroundAudio.loop = true;
+        backgroundAudio.volume = 0;
+
+        const introScreen = document.getElementById('introScreen');
+        const introContent = document.getElementById('introContent');
+        const letterScreen = document.getElementById('letterScreen');
+        const envelopeContainer = document.getElementById('envelopeContainer');
+        const videoScreen = document.getElementById('videoScreen');
+        const videoElement = document.getElementById('videoElement');
+        const floatingHeartsContainer = document.getElementById('floatingHearts');
+
+        // ================================================
+        // FLOATING HEARTS INITIALIZATION
+        // ================================================
+        function initializeFloatingHearts() {
+            const heartCount = 8;
+            for (let i = 0; i < heartCount; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                
+                const sizeClass = Math.random() > 0.7 ? (Math.random() > 0.5 ? 'small' : 'large') : '';
+                if (sizeClass) heart.classList.add(sizeClass);
+
+                const randomX = Math.random() * 100;
+                const randomY = Math.random() * 100;
+                const animationDelay = Math.random() * 2;
+                const animationDuration = 6 + Math.random() * 4;
+
+                heart.textContent = '♥';
+                heart.style.left = randomX + '%';
+                heart.style.top = randomY + '%';
+                heart.style.animationDelay = animationDelay + 's';
+                heart.style.animationDuration = animationDuration + 's';
+
+                floatingHeartsContainer.appendChild(heart);
+            }
+        }
+
+        // ================================================
+        // AUDIO MANAGEMENT
+        // ================================================
+        function fadeInAudio() {
+            if (audioPlaying || audioInitialized) return;
+            audioInitialized = true;
+            
+            const playPromise = backgroundAudio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch((error) => {
+                    console.log('Autoplay prevented:', error);
+                    audioInitialized = false;
+                });
+            }
+
+            let currentVolume = 0;
+            const startTime = Date.now();
+            const fadeDuration = CONFIG.audioFadeInDuration;
+
+            function updateVolume() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / fadeDuration, 1);
+                
+                // Easing function for smooth fade
+                currentVolume = CONFIG.audioMaxVolume * easeInOutQuad(progress);
+                backgroundAudio.volume = Math.max(0, Math.min(1, currentVolume));
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateVolume);
+                } else {
+                    audioPlaying = true;
+                }
+            }
+
+            updateVolume();
+        }
+
+        function fadeOutAudio() {
+            audioPlaying = false;
+            audioInitialized = false;
+
+            let currentVolume = backgroundAudio.volume;
+            const startTime = Date.now();
+            const fadeDuration = CONFIG.audioFadeOutDuration;
+
+            function updateVolume() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / fadeDuration, 1);
+
+                currentVolume = backgroundAudio.volume * (1 - progress);
+                backgroundAudio.volume = Math.max(0, currentVolume);
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateVolume);
+                } else {
+                    backgroundAudio.pause();
+                    backgroundAudio.currentTime = 0;
+                }
+            }
+
+            updateVolume();
+        }
+
+        // ================================================
+        // EASING FUNCTIONS
+        // ================================================
+        function easeInOutQuad(t) {
+            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        }
+
+        // ================================================
+        // HEART EXPLOSION EFFECT
+        // ================================================
+        function createHeartExplosion() {
+            const envelopeRect = envelopeContainer.getBoundingClientRect();
+            const centerX = envelopeRect.left + envelopeRect.width / 2;
+            const centerY = envelopeRect.top + envelopeRect.height / 2;
+
+            const particleCount = 12;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (i / particleCount) * Math.PI * 2;
+                const distance = 300 + Math.random() * 100;
+
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance + (Math.random() - 0.5) * 100;
+
+                const particle = document.createElement('div');
+                particle.className = 'heart-particle';
+                particle.textContent = '♥';
+                particle.style.left = centerX + 'px';
+                particle.style.top = centerY + 'px';
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+
+                document.body.appendChild(particle);
+
+                particle.classList.add('explode');
+
+                setTimeout(() => particle.remove(), 1200);
+            }
+
+            // Screen zoom effect
+            letterScreen.style.animation = 'none';
+            letterScreen.offsetHeight; // trigger reflow
+            letterScreen.style.transform = 'scale(1.02)';
+            letterScreen.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)';
+
+            setTimeout(() => {
+                letterScreen.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        // ================================================
+        // ENVELOPE INTERACTION
+        // ================================================
+        function openEnvelope() {
+            if (envelopeOpened || transitionInProgress) return;
+            envelopeOpened = true;
+            transitionInProgress = true;
+
+            envelopeContainer.classList.add('opened');
+            
+            // Fade out audio
+            fadeOutAudio();
+
+            // Heart explosion
+            setTimeout(() => createHeartExplosion(), 400);
+
+            // Transition to video screen
+            setTimeout(() => {
+                letterScreen.classList.add('fade-out');
+                videoScreen.classList.add('active');
+                videoElement.play();
+                transitionInProgress = false;
+            }, 1200);
+        }
+
+        function showLetterScreen() {
+            if (transitionInProgress) return;
+            transitionInProgress = true;
+
+            introScreen.classList.add('fade-out');
+            
+            setTimeout(() => {
+                letterScreen.style.display = 'flex';
+                fadeInAudio();
+                transitionInProgress = false;
+            }, 400);
+        }
+
+        // ================================================
+        // EVENT LISTENERS
+        // ================================================
+        introContent.addEventListener('click', showLetterScreen);
+        introContent.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            showLetterScreen();
+        });
+
+        envelopeContainer.addEventListener('click', openEnvelope);
+        envelopeContainer.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            openEnvelope();
+        });
+
+        // Start audio on first interaction (fallback)
+        document.addEventListener('click', () => {
+            if (!audioInitialized) fadeInAudio();
+        }, { once: true });
+
+        document.addEventListener('touchstart', () => {
+            if (!audioInitialized) fadeInAudio();
+        }, { once: true });
+
+        // ================================================
+        // INITIALIZATION
+        // ================================================
+        window.addEventListener('load', () => {
+            initializeFloatingHearts();
+        });
+    </script>
+</body>
+</html>
